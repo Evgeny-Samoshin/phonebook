@@ -2,17 +2,17 @@
 
 const data = [
   {
-    name: 'Иван',
+    name: 'Вадим',
     surname: 'Петров',
     phone: '+79514545454',
   },
   {
-    name: 'Игорь',
+    name: 'Александр',
     surname: 'Семёнов',
     phone: '+79999999999',
   },
   {
-    name: 'Семён',
+    name: 'Юрий',
     surname: 'Иванов',
     phone: '+79800252525',
   },
@@ -91,8 +91,8 @@ const data = [
     thead.insertAdjacentHTML('beforeend', `
       <tr>
         <th class="delete">Удалить</th>
-        <th>Имя</th>
-        <th>Фамилия</th>
+        <th class="th-name">Имя</th>
+        <th class="th-surname">Фамилия</th>
         <th>Телефон</th>
       </tr>
     `);
@@ -101,6 +101,7 @@ const data = [
 
     table.append(thead, tbody);
 
+    table.thead = thead;
     table.tbody = tbody;
 
     return table;
@@ -169,7 +170,7 @@ const data = [
     footer.append(footerContainer);
 
     return footer;
-  }
+  };
 
   const renderPhoneBook = (app, title) => {
     const header = createHeader();
@@ -200,14 +201,17 @@ const data = [
       list: table.tbody,
       logo,
       btnAdd: btnGroup.btns[0],
+      btnDel: btnGroup.btns[1],
       formOverlay: form.overlay,
       form: form.form,
       closeBtn: form.closeBtn,
+      thead: table.thead,
     };
   };
 
   const createRow = ({name: firstName, surname, phone}) => {
     const tr = document.createElement('tr');
+    tr.classList.add('contact');
 
     const tdDel = document.createElement('td');
     tdDel.classList.add('delete');
@@ -240,8 +244,9 @@ const data = [
   };
 
   const renderContacts = (elem, data) => {
-    const allRow = data.map(createRow);;
+    const allRow = data.map(createRow);
 
+    elem.innerHTML = '';
     elem.append(...allRow);
 
     return allRow;
@@ -260,13 +265,29 @@ const data = [
     });
   };
 
-
+  const sortByName = (elem, data) => {
+    data.sort((a, b) => a.name.localeCompare(b.name));
+    renderContacts(elem, data);
+  };
+  const sortBySurname = (elem, data) => {
+    data.sort((a, b) => a.surname.localeCompare(b.surname));
+    renderContacts(elem, data);
+  };
 
   const init = (selectorApp, title) => {
     const app = document.querySelector(selectorApp);
     const phoneBook = renderPhoneBook(app, title);
 
-    const {list, logo, btnAdd, formOverlay, form, closeBtn} = phoneBook;
+    const {
+      list,
+      logo,
+      btnAdd,
+      btnDel,
+      formOverlay,
+      form,
+      closeBtn,
+      thead,
+    } = phoneBook;
 
     //Функционал
 
@@ -277,17 +298,36 @@ const data = [
     btnAdd.addEventListener('click', () => {
       formOverlay.classList.add('is-visible');
     });
-    
-    form.addEventListener('click', e => {
-      e.stopPropagation();
+
+    formOverlay.addEventListener('click', e => {
+      if (e.target === formOverlay || e.target === closeBtn) {
+        formOverlay.classList.remove('is-visible');
+      }
     });
 
-    formOverlay.addEventListener('click', () => {
-      formOverlay.classList.remove('is-visible');
+    btnDel.addEventListener('click', () => {
+      document.querySelectorAll('.delete').forEach(del => {
+        del.classList.toggle('is-visible');
+      })
     });
 
-    closeBtn.addEventListener('click', () => {
-      formOverlay.classList.remove('is-visible');
+    list.addEventListener('click', e => {
+      if (e.target.closest('.del-icon')) {
+        e.target.closest('.contact').remove();
+      };
+    });
+
+    thead.addEventListener('click', e => {
+      if (e.target.closest('.th-name')) {
+        console.log(e.target);
+        
+        sortByName(list, data);
+      };
+      if (e.target.closest('.th-surname')) {
+        console.log(e.target);
+        
+        sortBySurname(list, data);
+      };
     });
   };
 

@@ -22,6 +22,11 @@ body {
   }
 }
 
+.th-name,
+.th-surname {
+  cursor: pointer;
+}
+
 .delete {
   display: none;
 }
