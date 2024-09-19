@@ -1,27 +1,18 @@
 'use strict';
 
-const data = [
-  {
-    name: 'Вадим',
-    surname: 'Петров',
-    phone: '+79514545454',
-  },
-  {
-    name: 'Александр',
-    surname: 'Семёнов',
-    phone: '+79999999999',
-  },
-  {
-    name: 'Юрий',
-    surname: 'Иванов',
-    phone: '+79800252525',
-  },
-  {
-    name: 'Мария',
-    surname: 'Попова',
-    phone: '+79876543210',
-  },
-];
+const getStorage = key => JSON.parse(localStorage.getItem(key)) || [];
+
+const setStorage = (key, obj) => {
+  const data = getStorage(key);
+  data.push(obj);
+  localStorage.setItem(key, JSON.stringify(data));
+};
+
+const removeStorage = (phone) => {
+  const data = getStorage('data');
+  
+  localStorage.setItem('data', JSON.stringify(data.filter(item => item.phone !== phone)));
+}
 
 const addContactData = (contact) => {
   data.push(contact);
@@ -231,6 +222,7 @@ const addContactData = (contact) => {
 
     const tdPhone = document.createElement('td');
     const phoneLink = document.createElement('a');
+    phoneLink.classList.add('table-phone');
     phoneLink.href = `tel:${phone}`;
     tdPhone.append(phoneLink);
     phoneLink.textContent = phone;
@@ -247,11 +239,14 @@ const addContactData = (contact) => {
     return tr;
   };
 
-  const renderContacts = (elem, data) => {
+  const renderContacts = (list, data) => {
+    console.log(data);
+    
+    localStorage.setItem('data', JSON.stringify(data));
     const allRow = data.map(createRow);
 
-    elem.innerHTML = '';
-    elem.append(...allRow);
+    list.innerHTML = '';
+    list.append(...allRow);
 
     return allRow;
   };
@@ -269,16 +264,22 @@ const addContactData = (contact) => {
     });
   };
 
-  const sortByName = (elem, data) => {
+  const sortByName = (list, data) => {
+    data = getStorage('data');
     data.sort((a, b) => a.name.localeCompare(b.name));
-    renderContacts(elem, data);
+    console.log(data);
+    
+    renderContacts(list, data);
   };
-  const sortBySurname = (elem, data) => {
+  const sortBySurname = (list, data) => {
+    data = getStorage('data');
     data.sort((a, b) => a.surname.localeCompare(b.surname));
-    renderContacts(elem, data);
+    console.log(data);
+    
+    renderContacts(list, data);
   };
 
-  const modalControl = (btnAdd, formOverlay) => {
+  const modalControl = (btnAdd, formOverlay, closeBtn) => {
     const openModal = () => {
       formOverlay.classList.add('is-visible');
     };
@@ -300,9 +301,7 @@ const addContactData = (contact) => {
     }
   };
 
-  const deleteControl = (btnDel, list) => {
-    console.log("asd" + btnDel);
-    
+  const deleteControl = (btnDel, list, data) => {
     btnDel.addEventListener('click', () => {
       document.querySelectorAll('.delete').forEach(del => {
         del.classList.toggle('is-visible');
@@ -311,12 +310,15 @@ const addContactData = (contact) => {
 
     list.addEventListener('click', e => {
       if (e.target.closest('.del-icon')) {
+        const phone = e.target.closest('.contact').querySelector('.table-phone').textContent;
+        removeStorage(phone);
+        // renderContacts(list, data);
         e.target.closest('.contact').remove();
       };
     });
   };
 
-  const sortControl = (thead) => {
+  const sortControl = (thead, list, data) => {
     thead.addEventListener('click', e => {
       if (e.target.closest('.th-name')) {
         console.log(e.target);
@@ -343,8 +345,8 @@ const addContactData = (contact) => {
 
       const newContact = Object.fromEntries(formData);
 
+      setStorage('data', newContact);
       addContactPage(newContact, list);
-      addContactData(newContact);
       form.reset();
       closeModal();
     });
@@ -352,7 +354,9 @@ const addContactData = (contact) => {
 
   const init = (selectorApp, title) => {
     const app = document.querySelector(selectorApp);
-
+    const data = getStorage('data');
+    console.log(data);
+    
     const {
       list,
       logo,
@@ -369,9 +373,9 @@ const addContactData = (contact) => {
     const allRow = renderContacts(list, data);
 
     hoverRow(allRow, logo);
-    const {closeModal} = modalControl(btnAdd, formOverlay);
-    deleteControl(btnDel, list);
-    sortControl(thead);
+    const {closeModal} = modalControl(btnAdd, formOverlay, closeBtn);
+    deleteControl(btnDel, list, data);
+    sortControl(thead, list, data);
     formControl(form, list, closeModal);
   };
 
